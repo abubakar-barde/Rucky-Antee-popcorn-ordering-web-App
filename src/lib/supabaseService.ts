@@ -204,6 +204,12 @@ export const ProductsService = {
  */
 export const OrdersService = {
   async getAll(): Promise<Order[]> {
+    let clearedTime = 0;
+    try {
+      const stored = localStorage.getItem('ruckyn_antee_cleared_timestamp');
+      if (stored) clearedTime = parseInt(stored, 10) || 0;
+    } catch {}
+
     if (!isSupabaseConfigured()) {
       return [];
     }
@@ -219,7 +225,11 @@ export const OrdersService = {
         return [];
       }
 
-      return (data || []).map((row: any) => mapOrderFromDb(row));
+      const orders = (data || []).map((row: any) => mapOrderFromDb(row));
+      if (clearedTime > 0) {
+        return orders.filter(o => new Date(o.created_at).getTime() > clearedTime);
+      }
+      return orders;
     } catch (err) {
       console.error('Unexpected error fetching orders from Supabase:', err);
       return [];
@@ -393,6 +403,7 @@ export const OrdersService = {
 
   async deleteAll(): Promise<boolean> {
     try {
+      localStorage.setItem('ruckyn_antee_cleared_timestamp', Date.now().toString());
       localStorage.removeItem('ruckyn_antee_local_orders_v1');
     } catch {}
 
@@ -401,13 +412,8 @@ export const OrdersService = {
     }
 
     try {
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .not('id', 'is', null);
-      if (error) {
-        console.warn('Supabase delete orders warning:', error.message);
-      }
+      await supabase.from('order_items').delete().not('id', 'is', null);
+      await supabase.from('orders').delete().not('id', 'is', null);
       return true;
     } catch (err) {
       console.warn('Unexpected error clearing orders from Supabase:', err);
