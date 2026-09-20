@@ -1,0 +1,6 @@
+{
+  "name": "Ruckyn Antee Popcorn",
+  "description": "A modern, role-based popcorn ordering and business management platform with real-time order tracking and admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
