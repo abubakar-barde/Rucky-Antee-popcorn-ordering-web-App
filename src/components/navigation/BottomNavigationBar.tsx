@@ -53,7 +53,7 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
       {
         id: 'home',
         label: 'Home',
-        icon: <Home className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />,
+        icon: <Home className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />,
         isActive: isHomeActive,
         onClick: () => {
           onNavigate('home');
@@ -63,7 +63,7 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
       {
         id: 'menu',
         label: 'Menu',
-        icon: <Layers className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />,
+        icon: <Layers className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />,
         isActive: isMenuActive,
         onClick: () => {
           onNavigate('menu');
@@ -72,8 +72,8 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
       },
       {
         id: 'my-orders',
-        label: 'My Orders',
-        icon: <ClipboardList className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />,
+        label: 'Orders',
+        icon: <ClipboardList className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />,
         isActive: isOrdersActive,
         onClick: () => {
           onNavigate('my-orders');
@@ -85,11 +85,11 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
         label: 'Cart',
         icon: (
           <div className="relative flex items-center justify-center">
-            <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />
+            <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />
             {totalItemCount > 0 && (
               <span
                 id="bottom-nav-cart-badge"
-                className="absolute -top-1.5 -right-2.5 bg-[#F5C542] text-[#070e18] font-black text-[10px] min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center leading-none shadow-sm transition-transform duration-200"
+                className="absolute -top-2 -right-3 bg-amber-500 text-stone-950 font-black text-xs min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center leading-none shadow-md transition-transform duration-200"
               >
                 {totalItemCount}
               </span>
@@ -105,7 +105,7 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
       {
         id: 'account',
         label: 'Account',
-        icon: <User className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />,
+        icon: <User className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />,
         isActive: isAccountActive,
         onClick: () => {
           if (user) {
@@ -123,7 +123,7 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
       <nav
         id="app-bottom-navigation"
         aria-label="Customer Bottom Navigation"
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-stone-200 shadow-lg pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-amber-200/70 shadow-2xl pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2.5"
       >
         <div className="max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto px-2 sm:px-6">
           <div className="grid grid-cols-5 items-center justify-items-center">
@@ -132,24 +132,24 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
                 key={item.id}
                 id={`nav-item-${item.id}`}
                 onClick={item.onClick}
-                className={`w-full flex flex-col items-center justify-center py-1 sm:py-1.5 px-1 sm:px-2 rounded-xl transition-all duration-200 min-h-[48px] min-w-[52px] group relative focus:outline-none select-none ${
+                className={`w-full flex flex-col items-center justify-center py-1.5 sm:py-2 px-1 sm:px-2 rounded-2xl transition-all duration-200 min-h-[52px] min-w-[56px] group relative focus:outline-none select-none ${
                   item.isActive
-                    ? 'text-amber-700 bg-amber-50'
+                    ? 'text-amber-800 bg-amber-100/70 shadow-xs'
                     : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
                 }`}
               >
                 <div
-                  className={`relative flex items-center justify-center transition-transform duration-200 group-hover:scale-105 ${
-                    item.isActive ? '' : ''
+                  className={`relative flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${
+                    item.isActive ? 'scale-105' : ''
                   }`}
                 >
                   {item.icon}
                 </div>
                 <span
-                  className={`text-[11px] sm:text-xs tracking-tight mt-1 leading-tight transition-colors duration-200 whitespace-nowrap ${
+                  className={`text-xs sm:text-sm tracking-tight mt-1 leading-tight transition-colors duration-200 whitespace-nowrap ${
                     item.isActive
-                      ? 'font-bold text-amber-800'
-                      : 'font-medium text-stone-700 group-hover:text-stone-900'
+                      ? 'font-extrabold text-amber-900'
+                      : 'font-semibold text-stone-700 group-hover:text-stone-900'
                   }`}
                 >
                   {item.label}
@@ -177,7 +177,7 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
     {
       id: 'dashboard',
       label: 'Dashboard',
-      icon: <LayoutDashboard className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />,
+      icon: <LayoutDashboard className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />,
       isActive: isDashboardActive,
       onClick: () => {
         onSelectTab('dashboard');
@@ -189,11 +189,11 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
       label: 'Orders',
       icon: (
         <div className="relative flex items-center justify-center">
-          <ClipboardList className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />
+          <ClipboardList className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />
           {pendingOrdersCount > 0 && (
             <span
               id="admin-bottom-orders-badge"
-              className="absolute -top-1.5 -right-2.5 bg-[#F5C542] text-[#070e18] font-black text-[10px] min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center leading-none shadow-sm transition-transform duration-200"
+              className="absolute -top-2 -right-3 bg-amber-500 text-stone-950 font-black text-xs min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center leading-none shadow-md transition-transform duration-200"
             >
               {pendingOrdersCount}
             </span>
@@ -209,7 +209,7 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
     {
       id: 'products',
       label: 'Products',
-      icon: <Package className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />,
+      icon: <Package className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />,
       isActive: isProductsActive,
       onClick: () => {
         onSelectTab('products');
@@ -219,7 +219,7 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
     {
       id: 'customers',
       label: 'Customers',
-      icon: <Users className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />,
+      icon: <Users className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />,
       isActive: isCustomersActive,
       onClick: () => {
         onSelectTab('customers');
@@ -229,7 +229,7 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
     {
       id: 'account',
       label: 'Account',
-      icon: <User className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.8} />,
+      icon: <User className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />,
       isActive: isAccountActive,
       onClick: () => {
         onSelectTab('settings');
@@ -242,7 +242,7 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
     <nav
       id="admin-bottom-navigation"
       aria-label="Admin Bottom Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-stone-200 shadow-lg pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-amber-200/70 shadow-2xl pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2.5"
     >
       <div className="max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto px-2 sm:px-6">
         <div className="grid grid-cols-5 items-center justify-items-center">
@@ -251,24 +251,24 @@ export const BottomNavigationBar: React.FC<BottomNavigationBarProps> = (props) =
               key={item.id}
               id={`admin-nav-item-${item.id}`}
               onClick={item.onClick}
-              className={`w-full flex flex-col items-center justify-center py-1 sm:py-1.5 px-1 sm:px-2 rounded-xl transition-all duration-200 min-h-[48px] min-w-[52px] group relative focus:outline-none select-none ${
+              className={`w-full flex flex-col items-center justify-center py-1.5 sm:py-2 px-1 sm:px-2 rounded-2xl transition-all duration-200 min-h-[52px] min-w-[56px] group relative focus:outline-none select-none ${
                 item.isActive
-                  ? 'text-amber-700 bg-amber-50'
+                  ? 'text-amber-800 bg-amber-100/70 shadow-xs'
                   : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100'
               }`}
             >
               <div
-                className={`relative flex items-center justify-center transition-transform duration-200 group-hover:scale-105 ${
-                  item.isActive ? '' : ''
+                className={`relative flex items-center justify-center transition-transform duration-200 group-hover:scale-110 ${
+                  item.isActive ? 'scale-105' : ''
                 }`}
               >
                 {item.icon}
               </div>
               <span
-                className={`text-[11px] sm:text-xs tracking-tight mt-1 leading-tight transition-colors duration-200 whitespace-nowrap ${
+                className={`text-xs sm:text-sm tracking-tight mt-1 leading-tight transition-colors duration-200 whitespace-nowrap ${
                   item.isActive
-                    ? 'font-bold text-amber-800'
-                    : 'font-medium text-stone-700 group-hover:text-stone-900'
+                    ? 'font-extrabold text-amber-900'
+                    : 'font-semibold text-stone-700 group-hover:text-stone-900'
                 }`}
               >
                 {item.label}

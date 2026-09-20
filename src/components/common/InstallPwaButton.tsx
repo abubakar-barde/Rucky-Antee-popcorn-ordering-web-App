@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Download, Smartphone, ExternalLink } from 'lucide-react';
 
 export const InstallPwaButton: React.FC = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [hasPrompt, setHasPrompt] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -18,15 +18,14 @@ export const InstallPwaButton: React.FC = () => {
     const iOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
     setIsIOS(iOS);
 
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+    const handleInstallReady = () => {
+      setHasPrompt(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-install-ready', handleInstallReady);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-install-ready', handleInstallReady);
     };
   }, []);
 
@@ -35,15 +34,13 @@ export const InstallPwaButton: React.FC = () => {
   }
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
+    if ((window as any).triggerPwaInstall) {
+      const outcome = await (window as any).triggerPwaInstall();
+      if (outcome) {
+        return;
       }
-    } else {
-      setShowModal(true);
     }
+    setShowModal(true);
   };
 
   const handleOpenInNewTab = () => {
