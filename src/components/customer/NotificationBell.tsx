@@ -22,7 +22,12 @@ export const NotificationBell: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-[calc(100vw-2.5rem)] max-w-[320px] sm:w-80 bg-white rounded-xl shadow-2xl border border-stone-200 z-50 overflow-hidden">
+        <>
+          <div 
+            className="fixed inset-0 z-40 sm:hidden" 
+            onClick={() => setIsOpen(false)} 
+          />
+          <div className="fixed left-4 right-4 top-16 max-w-sm mx-auto sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
             <h3 className="text-sm font-bold text-stone-900">Notifications</h3>
             {unreadCount > 0 && (
@@ -64,6 +69,7 @@ export const NotificationBell: React.FC = () => {
             )}
           </div>
         </div>
+        </>
       )}
     </div>
   );
