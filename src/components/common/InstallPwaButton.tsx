@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Smartphone } from 'lucide-react';
+import { Download, Smartphone, ExternalLink } from 'lucide-react';
 
 export const InstallPwaButton: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -46,6 +46,10 @@ export const InstallPwaButton: React.FC = () => {
     }
   };
 
+  const handleOpenInNewTab = () => {
+    window.open(window.location.href, '_blank');
+  };
+
   return (
     <>
       <button
@@ -70,30 +74,45 @@ export const InstallPwaButton: React.FC = () => {
               </div>
             </div>
 
-            {isIOS ? (
-              <div className="space-y-3 text-sm text-stone-300 bg-stone-800/60 p-4 rounded-xl border border-stone-700/60">
-                <p className="font-semibold text-amber-400">How to install on iPhone & iPad (Safari):</p>
-                <ol className="list-decimal list-inside space-y-2 text-xs text-stone-300">
-                  <li>Tap the <span className="font-bold text-amber-300">Share</span> button <span className="inline-block px-1.5 py-0.5 bg-stone-700 rounded text-stone-200">⎋</span> in Safari's bottom toolbar.</li>
-                  <li>Scroll down and tap <span className="font-bold text-amber-300">"Add to Home Screen"</span> ➕.</li>
-                  <li>Tap <span className="font-bold text-amber-300">Add</span> in the top right corner.</li>
-                </ol>
+            <div className="space-y-3 mb-5">
+              <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl text-xs text-amber-200">
+                <p className="font-semibold mb-1">💡 Tip for Preview Mode:</p>
+                Because this app is currently viewed inside the editor preview, browsers restrict direct installation prompts. Tap <span className="font-bold underline">"Open in New Tab"</span> below to open the app directly, then install it!
               </div>
-            ) : (
-              <div className="space-y-3 text-sm text-stone-300 bg-stone-800/60 p-4 rounded-xl border border-stone-700/60">
-                <p className="font-semibold text-amber-400">How to install on Android / Desktop:</p>
-                <p className="text-xs text-stone-300">
-                  Tap your browser menu (<span className="font-bold text-amber-300">⋮</span> or <span className="font-bold text-amber-300">...</span>) and select <span className="font-bold text-amber-300">"Install app"</span> or <span className="font-bold text-amber-300">"Add to Home screen"</span>.
-                </p>
-              </div>
-            )}
 
-            <div className="mt-6 flex justify-end">
+              {isIOS ? (
+                <div className="space-y-2 text-xs text-stone-300 bg-stone-800/60 p-4 rounded-xl border border-stone-700/60">
+                  <p className="font-semibold text-amber-400">How to install on iPhone & iPad (Safari):</p>
+                  <ol className="list-decimal list-inside space-y-1.5">
+                    <li>Open this app in Safari (or tap <span className="text-amber-300 font-bold">Open in New Tab</span>).</li>
+                    <li>Tap the <span className="font-bold text-amber-300">Share</span> button <span className="inline-block px-1.5 py-0.5 bg-stone-700 rounded text-stone-200">⎋</span> in Safari's bottom toolbar.</li>
+                    <li>Scroll down and tap <span className="font-bold text-amber-300">"Add to Home Screen"</span> ➕.</li>
+                    <li>Tap <span className="font-bold text-amber-300">Add</span> in the top right corner.</li>
+                  </ol>
+                </div>
+              ) : (
+                <div className="space-y-2 text-xs text-stone-300 bg-stone-800/60 p-4 rounded-xl border border-stone-700/60">
+                  <p className="font-semibold text-amber-400">How to install on Android / Chrome:</p>
+                  <p>
+                    Open in a new browser tab, tap your browser menu (<span className="font-bold text-amber-300">⋮</span>), and select <span className="font-bold text-amber-300">"Install app"</span> or <span className="font-bold text-amber-300">"Add to Home screen"</span>.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between gap-3 pt-2 border-t border-stone-800">
+              <button
+                onClick={handleOpenInNewTab}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold text-xs transition-all shadow-md"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Open in New Tab
+              </button>
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold text-xs transition-all"
+                className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-medium text-xs transition-all"
               >
-                Got it
+                Close
               </button>
             </div>
           </div>
