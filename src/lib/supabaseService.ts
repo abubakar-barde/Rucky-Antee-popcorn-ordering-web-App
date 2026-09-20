@@ -390,6 +390,30 @@ export const OrdersService = {
       supabase.removeChannel(channel);
     };
   },
+
+  async deleteAll(): Promise<boolean> {
+    try {
+      localStorage.removeItem('ruckyn_antee_local_orders_v1');
+    } catch {}
+
+    if (!isSupabaseConfigured()) {
+      return true;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .not('id', 'is', null);
+      if (error) {
+        console.warn('Supabase delete orders warning:', error.message);
+      }
+      return true;
+    } catch (err) {
+      console.warn('Unexpected error clearing orders from Supabase:', err);
+      return true;
+    }
+  },
 };
 
 /**
@@ -520,6 +544,24 @@ export const NotificationsService = {
       .update({ is_read: true })
       .eq('user_id', userId)
       .eq('is_read', false);
+    if (error) throw error;
+  },
+
+  async delete(notificationId: string): Promise<void> {
+    if (!isSupabaseConfigured()) return;
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', notificationId);
+    if (error) throw error;
+  },
+
+  async clearAll(userId: string): Promise<void> {
+    if (!isSupabaseConfigured()) return;
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('user_id', userId);
     if (error) throw error;
   },
 

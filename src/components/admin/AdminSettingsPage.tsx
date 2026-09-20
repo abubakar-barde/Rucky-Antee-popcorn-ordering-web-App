@@ -11,10 +11,36 @@ import {
   Sliders,
   UserCheck,
   Sparkles,
+  Trash2,
+  RefreshCw,
 } from 'lucide-react';
+import { useOrders } from '../../context/OrderContext';
 
 export const AdminSettingsPage: React.FC = () => {
+  const { clearAllOrders } = useOrders();
   const [savedSettingsNotice, setSavedSettingsNotice] = useState(false);
+  const [clearingOrders, setClearingOrders] = useState(false);
+  const [clearOrdersNotice, setClearOrdersNotice] = useState(false);
+
+  const handleClearAllOrders = async () => {
+    if (!window.confirm('Are you sure you want to clear ALL previous orders to start a new month? This action cannot be undone.')) {
+      return;
+    }
+    setClearingOrders(true);
+    try {
+      const success = await clearAllOrders();
+      if (success) {
+        setClearOrdersNotice(true);
+        setTimeout(() => setClearOrdersNotice(false), 4000);
+      } else {
+        alert('Failed to clear orders. Please check Supabase database connection.');
+      }
+    } catch (err: any) {
+      alert('Error clearing orders: ' + (err.message || 'Unknown error'));
+    } finally {
+      setClearingOrders(false);
+    }
+  };
 
   // Store operational settings state
   const [storeName, setStoreName] = useState(() => {
@@ -356,6 +382,57 @@ export const AdminSettingsPage: React.FC = () => {
                 {autoAcceptOrders ? 'Auto-Accept ON' : 'Manual Review'}
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Monthly Order Reset & Clearance */}
+        <div className="bg-white rounded-3xl border border-stone-200/80 shadow-xs p-6 sm:p-8 space-y-4">
+          <div className="flex items-center gap-3 border-b border-stone-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-stone-900 font-display">
+                New Month Order Clearance
+              </h3>
+              <p className="text-xs text-stone-500">
+                Clear all previous orders to start fresh for a new month directly from your admin panel.
+              </p>
+            </div>
+          </div>
+
+          {clearOrdersNotice && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>All orders successfully cleared. Your dashboard is now reset for the new month!</span>
+            </div>
+          )}
+
+          <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-sm font-bold text-stone-900 block">Clear All Orders Database</span>
+              <span className="text-xs text-stone-500 block mt-0.5">
+                Permanently deletes all historical orders and order items to clear the dashboard for a new month.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearAllOrders}
+              disabled={clearingOrders}
+              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-xs rounded-xl transition-all shadow-xs shrink-0 flex items-center gap-2 disabled:opacity-50"
+            >
+              {clearingOrders ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Clearing...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  <span>Clear All Orders</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 

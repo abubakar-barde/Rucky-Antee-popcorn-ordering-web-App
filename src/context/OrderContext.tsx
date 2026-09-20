@@ -12,6 +12,7 @@ interface OrderContextType {
   isLoading: boolean;
   createOrder: (orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) => Promise<Order>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<boolean>;
+  clearAllOrders: () => Promise<boolean>;
   refreshOrders: () => Promise<void>;
   refreshProducts: () => Promise<void>;
   createProduct: (product: Omit<PopcornProduct, 'id'>) => Promise<PopcornProduct>;
@@ -123,6 +124,13 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return false;
   };
 
+  const clearAllOrders = async (): Promise<boolean> => {
+    await OrdersService.deleteAll();
+    setOrders([]);
+    setActiveOrder(null);
+    return true;
+  };
+
   const refreshOrders = async () => {
     const fetched = await OrdersService.getAll();
     setOrders(fetched);
@@ -167,6 +175,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isLoading,
         createOrder,
         updateOrderStatus,
+        clearAllOrders,
         refreshOrders,
         refreshProducts,
         createProduct,

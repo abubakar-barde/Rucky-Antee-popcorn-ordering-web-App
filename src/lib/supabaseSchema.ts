@@ -120,6 +120,10 @@ create policy "Admins can update orders"
   on public.orders for update
   using ((select role from public.profiles where id = auth.uid()) = 'admin');
 
+create policy "Admins can delete orders"
+  on public.orders for delete
+  using ((select role from public.profiles where id = auth.uid()) = 'admin');
+
 
 -- 4. Create ORDER_ITEMS table
 create table if not exists public.order_items (
@@ -152,6 +156,10 @@ create policy "Order items viewable by order owner or admin"
 create policy "Insert order items on order placement"
   on public.order_items for insert
   with check (true);
+
+create policy "Admins can delete order items"
+  on public.order_items for delete
+  using ((select role from public.profiles where id = auth.uid()) = 'admin');
 
 
 -- 6. Create NOTIFICATIONS table
