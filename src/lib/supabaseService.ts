@@ -357,6 +357,7 @@ export const OrdersService = {
         out_for_delivery: 'Your order is out for delivery.',
         delivered: 'Your order has been delivered.',
         cancelled: 'Your order has been cancelled.',
+        archived: '',
       };
       await NotificationsService.create({
         user_id: data.customer_id,
@@ -371,6 +372,23 @@ export const OrdersService = {
     }
 
     return mapOrderFromDb(data);
+  },
+
+  async deleteOrder(orderId: string): Promise<boolean> {
+    if (!isSupabaseConfigured()) return false;
+    try {
+      // Soft delete: update status to 'archived' instead of 'cancelled' to avoid customer notifications
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'archived', updated_at: new Date().toISOString() })
+        .eq('id', orderId);
+        
+      if (error) throw error;
+      return true;
+    } catch (err) {
+      console.error('Error soft-deleting order from Supabase:', err);
+      return false;
+    }
   },
 
   subscribe(callback: (orders: Order[]) => void): () => void {
@@ -412,12 +430,16 @@ export const OrdersService = {
     }
 
     try {
-      await supabase.from('order_items').delete().not('id', 'is', null);
-      await supabase.from('orders').delete().not('id', 'is', null);
+      const { error: itemsError } = await supabase.from('order_items').delete().not('id', 'is', null);
+      if (itemsError) throw itemsError;
+      
+      const { error: ordersError } = await supabase.from('orders').delete().not('id', 'is', null);
+      if (ordersError) throw ordersError;
+      
       return true;
     } catch (err) {
-      console.warn('Unexpected error clearing orders from Supabase:', err);
-      return true;
+      console.error('Error clearing orders from Supabase:', err);
+      return false;
     }
   },
 };

@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { ShieldCheck, User, Sparkles, Database, CheckCircle2 } from 'lucide-react';
-import { InstallPwaButton } from './InstallPwaButton';
+import { ThemeToggle } from './ThemeToggle';
 
 interface DemoRoleBarProps {
   currentView: 'customer' | 'admin';
@@ -37,9 +37,9 @@ export const DemoRoleBar: React.FC<DemoRoleBarProps> = ({ currentView, onSwitchV
         </div>
       </div>
 
-      {/* Role and User controls */}
+      {/* Role, Theme and User controls */}
       <div className="flex items-center gap-2 sm:gap-4">
-        <InstallPwaButton />
+        <ThemeToggle />
         {/* User state */}
         <div className="flex items-center gap-1.5 text-stone-300">
           {user ? (

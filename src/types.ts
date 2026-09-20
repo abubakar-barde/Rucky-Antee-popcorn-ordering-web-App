@@ -20,7 +20,8 @@ export type OrderStatus =
   | 'ready'
   | 'out_for_delivery'
   | 'delivered'
-  | 'cancelled';
+  | 'cancelled'
+  | 'archived';
 
 export const formatOrderStatus = (status: OrderStatus | string): string => {
   switch (status) {
@@ -38,6 +39,8 @@ export const formatOrderStatus = (status: OrderStatus | string): string => {
       return 'Delivered';
     case 'cancelled':
       return 'Cancelled';
+    case 'archived':
+      return 'Archived';
     default:
       return status;
   }

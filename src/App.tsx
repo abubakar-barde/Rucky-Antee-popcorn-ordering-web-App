@@ -277,18 +277,21 @@ function MainApp() {
 }
 
 import { NotificationsProvider } from './context/NotificationsContext';
+import { ThemeProvider } from './context/ThemeContext';
 // ... rest of imports
 
 export default function App() {
   return (
-    <AuthProvider>
-      <OrderProvider>
-        <CartProvider>
-          <NotificationsProvider>
-            <MainApp />
-          </NotificationsProvider>
-        </CartProvider>
-      </OrderProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <OrderProvider>
+          <CartProvider>
+            <NotificationsProvider>
+              <MainApp />
+            </NotificationsProvider>
+          </CartProvider>
+        </OrderProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

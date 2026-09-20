@@ -18,6 +18,7 @@ interface OrderContextType {
   createProduct: (product: Omit<PopcornProduct, 'id'>) => Promise<PopcornProduct>;
   updateProduct: (id: string, updates: Partial<PopcornProduct>) => Promise<PopcornProduct | null>;
   deleteProduct: (id: string) => Promise<boolean>;
+  deleteOrder: (orderId: string) => Promise<boolean>;
   lastRealtimeAlert: { message: string; timestamp: number } | null;
   clearRealtimeAlert: () => void;
 }
@@ -163,6 +164,32 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return success;
   };
 
+  const deleteOrder = async (orderId: string): Promise<boolean> => {
+    // Optimistically update the UI by setting status to archived
+    const previousOrders = [...orders];
+    setOrders((prev) => 
+      prev.map(o => o.id === orderId ? { ...o, status: 'archived' } : o)
+    );
+    if (activeOrder?.id === orderId) {
+      setActiveOrder({ ...activeOrder, status: 'archived' });
+    }
+
+    try {
+      const success = await OrdersService.deleteOrder(orderId);
+      if (!success) {
+        // If operation failed on server, revert the UI state
+        setOrders(previousOrders);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      // If error occurred, revert the UI state
+      setOrders(previousOrders);
+      console.error('Optimistic soft-delete failed, reverted UI:', err);
+      return false;
+    }
+  };
+
   const clearRealtimeAlert = () => setLastRealtimeAlert(null);
 
   return (
@@ -181,6 +208,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         createProduct,
         updateProduct,
         deleteProduct,
+        deleteOrder,
         lastRealtimeAlert,
         clearRealtimeAlert,
       }}

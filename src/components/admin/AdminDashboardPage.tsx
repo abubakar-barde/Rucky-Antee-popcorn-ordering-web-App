@@ -10,7 +10,6 @@ import {
   ArrowRight,
   Sparkles,
   TrendingUp,
-  Radio,
   ChefHat,
 } from 'lucide-react';
 import { formatNaira } from '../../lib/currency';
@@ -68,29 +67,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Realtime banner */}
-      <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-500 text-stone-950 flex items-center justify-center font-black">
-            <Radio className="w-4 h-4 animate-pulse" />
-          </div>
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-wider text-amber-900">
-              Supabase Realtime Order Synchronization Active
-            </h3>
-            <p className="text-xs text-amber-800">
-              When a customer places an order or status changes, this board refreshes instantaneously without reloading.
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={onViewOrders}
-          className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold text-xs shrink-0 shadow-xs"
-        >
-          Manage All Orders
-        </button>
-      </div>
-
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs flex items-center justify-between">

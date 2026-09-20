@@ -11,11 +11,14 @@ interface AdminOrdersPageProps {
 type OrderFilterTab = 'all' | 'pending' | 'active' | 'completed' | 'cancelled';
 
 export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({ onOpenOrder }) => {
-  const { orders, updateOrderStatus } = useOrders();
+  const { orders, updateOrderStatus, deleteOrder } = useOrders();
   const [activeTab, setActiveTab] = useState<OrderFilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredOrders = orders.filter((order) => {
+    // Hide archived orders entirely
+    if (order.status === 'archived') return false;
+
     // Tab filter
     let matchesTab = true;
     if (activeTab === 'pending') {
@@ -38,9 +41,15 @@ export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({ onOpenOrder })
     return matchesTab && matchesSearch;
   });
 
-  const handleStatusSelect = async (orderId: string, newStatus: OrderStatus, e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleStatusSelect = async (orderId: string, newStatus: OrderStatus | 'delete', e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();
-    await updateOrderStatus(orderId, newStatus);
+    if (newStatus === 'delete') {
+      if (window.confirm('Are you sure you want to permanently delete this order?')) {
+        await deleteOrder(orderId);
+      }
+    } else {
+      await updateOrderStatus(orderId, newStatus);
+    }
   };
 
   const getStatusBadge = (status: OrderStatus) => {
@@ -220,6 +229,7 @@ export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({ onOpenOrder })
                           <option value="out_for_delivery">Out for Delivery</option>
                           <option value="delivered">Delivered</option>
                           <option value="cancelled">Cancelled</option>
+                          <option value="delete" className="text-rose-600 font-bold">Delete Order</option>
                         </select>
                       </div>
                     </td>
