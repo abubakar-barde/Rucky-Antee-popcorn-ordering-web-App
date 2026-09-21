@@ -3,8 +3,50 @@ import { useOrders } from '../../context/OrderContext';
 import { Bell, X, CheckCircle, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+// Play a pleasant Web Audio API notification chime
+const playNotificationSound = () => {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    
+    // Play a delightful chime chord (C5 and G5)
+    const playTone = (freq: number, delay: number, duration: number) => {
+      setTimeout(() => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      }, delay);
+    };
+
+    playTone(523.25, 0, 0.25);   // C5
+    playTone(659.25, 100, 0.25); // E5
+    playTone(783.99, 200, 0.35); // G5
+  } catch (e) {
+    // AudioContext blocked before user interaction or not supported
+    console.warn('Audio chime note played check:', e);
+  }
+};
+
 export const RealtimeAlertToast: React.FC = () => {
   const { lastRealtimeAlert, clearRealtimeAlert } = useOrders();
+
+  // Play sound whenever a new alert arrives
+  React.useEffect(() => {
+    if (lastRealtimeAlert) {
+      playNotificationSound();
+    }
+  }, [lastRealtimeAlert?.timestamp]);
 
   return (
     <AnimatePresence>

@@ -40,7 +40,7 @@ export type CustomerPage =
   | 'profile';
 
 function MainApp() {
-  const { role } = useAuth();
+  const { role, isLoading } = useAuth();
   const { orders, products } = useOrders();
 
   // Role experience toggle: 'customer' | 'admin'
@@ -90,6 +90,17 @@ function MainApp() {
     setCurrentPage('order-confirmation');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-50 text-stone-600">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium tracking-wide">Loading session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50 font-sans text-stone-900 antialiased selection:bg-amber-400 selection:text-stone-950">

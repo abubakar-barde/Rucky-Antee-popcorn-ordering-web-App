@@ -2,7 +2,7 @@ import React from 'react';
 import { useOrders } from '../../context/OrderContext';
 import { Order, OrderStatus, formatOrderStatus } from '../../types';
 import {
-  DollarSign,
+  Banknote,
   ShoppingBag,
   Clock,
   CheckCircle,
@@ -84,7 +84,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             </span>
           </div>
           <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <DollarSign className="w-6 h-6" />
+            <Banknote className="w-6 h-6" />
           </div>
         </div>
 

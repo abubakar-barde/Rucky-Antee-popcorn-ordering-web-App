@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useOrders } from '../../context/OrderContext';
 import { Order, OrderStatus, formatOrderStatus } from '../../types';
-import { Search, Filter, Radio, ChevronRight, Eye } from 'lucide-react';
+import { Search, Filter, Radio, ChevronRight, Eye, Download, Trash2 } from 'lucide-react';
 import { formatNaira } from '../../lib/currency';
 
 interface AdminOrdersPageProps {
@@ -11,9 +11,16 @@ interface AdminOrdersPageProps {
 type OrderFilterTab = 'all' | 'pending' | 'active' | 'completed' | 'cancelled';
 
 export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({ onOpenOrder }) => {
-  const { orders, updateOrderStatus, deleteOrder } = useOrders();
+  const { orders, updateOrderStatus, deleteOrder, clearAllOrders } = useOrders();
   const [activeTab, setActiveTab] = useState<OrderFilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleClearAll = async () => {
+    if (window.confirm('Are you sure you want to completely clear and delete ALL orders? This will reset your order history for a fresh start.')) {
+      await clearAllOrders();
+      alert('All orders have been successfully cleared.');
+    }
+  };
 
   const filteredOrders = orders.filter((order) => {
     // Hide archived orders entirely
@@ -43,6 +50,36 @@ export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({ onOpenOrder })
 
     return matchesTab && matchesSearch;
   });
+
+  const handleExportCSV = () => {
+    if (!orders || orders.length === 0) {
+      alert('No orders available to export.');
+      return;
+    }
+
+    const headers = ['Order ID', 'Customer Name', 'Email', 'Phone', 'Status', 'Total (NGN)', 'Payment Method', 'City', 'Created At'];
+    const rows = orders.map((o) => [
+      `"${o.id || ''}"`,
+      `"${(o.customer_name || 'Guest').replace(/"/g, '""')}"`,
+      `"${(o.customer_email || '').replace(/"/g, '""')}"`,
+      `"${(o.customer_phone || o.phone || '').replace(/"/g, '""')}"`,
+      `"${o.status || ''}"`,
+      o.total || 0,
+      `"${o.payment_method || ''}"`,
+      `"${(o.delivery_city || '').replace(/"/g, '""')}"`,
+      `"${o.created_at || ''}"`,
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `orders_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleStatusSelect = async (orderId: string, newStatus: OrderStatus | 'delete', e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();
@@ -97,15 +134,33 @@ export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({ onOpenOrder })
           </p>
         </div>
 
-        <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by ID, customer name, phone..."
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-stone-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button
+            onClick={handleClearAll}
+            className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold hover:bg-rose-100 transition-colors shadow-xs"
+          >
+            <Trash2 className="w-4 h-4 text-rose-500" />
+            <span>Clear All Orders</span>
+          </button>
+
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 px-4 py-2 bg-stone-900 text-white rounded-xl text-xs font-bold hover:bg-stone-800 transition-colors shadow-xs"
+          >
+            <Download className="w-4 h-4 text-amber-400" />
+            <span>Export to CSV</span>
+          </button>
+
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by ID, customer name..."
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-stone-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+          </div>
         </div>
       </div>
 

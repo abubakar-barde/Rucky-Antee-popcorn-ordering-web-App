@@ -236,51 +236,63 @@ export const OrdersService = {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('*, order_items(*)')
+        .select('*, order_items(*), profiles:user_id(full_name, email, phone)')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase orders fetch error:', error);
-        return [];
+        // Fallback if foreign key join fails
+        const { data: fallbackData, error: fallbackErr } = await supabase
+          .from('orders')
+          .select('*, order_items(*)')
+          .order('created_at', { ascending: false });
+
+        if (fallbackErr) {
+          console.error('Supabase orders fetch error:', fallbackErr);
+          return [];
+        }
+        let orders = (fallbackData || []).map((row: any) => mapOrderFromDb(row));
+        // Enrich customer names from profiles
+        const ordersNeedingName = orders.filter(
+          (o) => !o.customer_name || o.customer_name === 'Customer' || o.customer_name === 'Valued Customer'
+        );
+        if (ordersNeedingName.length > 0) {
+          const userIds = Array.from(
+            new Set(ordersNeedingName.map((o) => o.user_id || o.customer_id).filter(Boolean))
+          );
+          if (userIds.length > 0) {
+            try {
+              const { data: profileRows } = await supabase
+                .from('profiles')
+                .select('id, full_name, email, phone')
+                .in('id', userIds);
+
+              if (profileRows && profileRows.length > 0) {
+                const profileMap = new Map(profileRows.map((p: any) => [p.id, p]));
+                orders.forEach((o) => {
+                  const targetId = o.user_id || o.customer_id;
+                  const p = profileMap.get(targetId);
+                  if (p && p.full_name) {
+                    o.customer_name = p.full_name;
+                    if (!o.customer_email && p.email) o.customer_email = p.email;
+                    if (!o.customer_phone && p.phone) {
+                      o.customer_phone = p.phone;
+                      o.phone = p.phone;
+                    }
+                  }
+                });
+              }
+            } catch (profileErr) {
+              console.warn('Could not enrich orders with profile names:', profileErr);
+            }
+          }
+        }
+        if (clearedTime > 0) {
+          return orders.filter((o) => new Date(o.created_at).getTime() > clearedTime);
+        }
+        return orders;
       }
 
       let orders = (data || []).map((row: any) => mapOrderFromDb(row));
-
-      // Enrich customer names from profiles for any historical orders where customer_name is missing or placeholder
-      const ordersNeedingName = orders.filter(
-        (o) => !o.customer_name || o.customer_name === 'Customer' || o.customer_name === 'Valued Customer'
-      );
-      if (ordersNeedingName.length > 0) {
-        const userIds = Array.from(
-          new Set(ordersNeedingName.map((o) => o.user_id || o.customer_id).filter(Boolean))
-        );
-        if (userIds.length > 0) {
-          try {
-            const { data: profileRows } = await supabase
-              .from('profiles')
-              .select('id, full_name, email, phone')
-              .in('id', userIds);
-
-            if (profileRows && profileRows.length > 0) {
-              const profileMap = new Map(profileRows.map((p: any) => [p.id, p]));
-              orders.forEach((o) => {
-                const targetId = o.user_id || o.customer_id;
-                const p = profileMap.get(targetId);
-                if (p && p.full_name) {
-                  o.customer_name = p.full_name;
-                  if (!o.customer_email && p.email) o.customer_email = p.email;
-                  if (!o.customer_phone && p.phone) {
-                    o.customer_phone = p.phone;
-                    o.phone = p.phone;
-                  }
-                }
-              });
-            }
-          } catch (profileErr) {
-            console.warn('Could not enrich orders with profile names:', profileErr);
-          }
-        }
-      }
 
       if (clearedTime > 0) {
         return orders.filter((o) => new Date(o.created_at).getTime() > clearedTime);
