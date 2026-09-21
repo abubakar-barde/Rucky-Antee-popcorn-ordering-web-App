@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import { ShieldCheck, User, Sparkles, Database, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Sparkles } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
 interface DemoRoleBarProps {
@@ -11,29 +10,14 @@ interface DemoRoleBarProps {
 
 export const DemoRoleBar: React.FC<DemoRoleBarProps> = ({ currentView, onSwitchView }) => {
   const { user, role, setShowAuthModal } = useAuth();
-  const supabaseConnected = isSupabaseConfigured();
 
   return (
     <header className="bg-stone-900 text-stone-300 text-xs px-3 py-1.5 border-b border-stone-800 flex flex-wrap items-center justify-between gap-2 z-40">
-      {/* Brand tag & Supabase status */}
+      {/* Brand tag */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 font-semibold text-amber-400">
           <Sparkles className="w-3.5 h-3.5" />
           <span>Ruckyn Antee Popcorn</span>
-        </div>
-
-        <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-stone-800/80 border border-stone-700/60 text-[11px]">
-          <Database className="w-3 h-3 text-amber-400" />
-          <span>Backend: Supabase</span>
-          {supabaseConnected ? (
-            <span className="flex items-center gap-1 text-emerald-400 font-medium">
-              <CheckCircle2 className="w-3 h-3" /> Live
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 text-amber-300 font-medium" title="Configure SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Awaiting Keys
-            </span>
-          )}
         </div>
       </div>
 

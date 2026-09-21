@@ -269,7 +269,7 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
                       className="w-full text-left px-3.5 py-2 text-xs text-stone-300 hover:bg-stone-800 hover:text-white flex items-center gap-2 font-medium transition-colors"
                     >
                       <Settings className="w-4 h-4 text-stone-400" />
-                      Settings & Supabase
+                      Settings
                     </button>
 
                     <div className="border-t border-stone-800 mt-1 pt-1">
@@ -287,16 +287,6 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({
                   </div>
                 )}
               </div>
-
-              {/* Direct Desktop Logout Button */}
-              <button
-                onClick={signOut}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-900/50 hover:border-rose-800 text-rose-300 text-xs font-bold transition-colors"
-                title="Log Out of Admin Portal"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Logout</span>
-              </button>
 
               {/* Mobile Menu Hamburger */}
               <button

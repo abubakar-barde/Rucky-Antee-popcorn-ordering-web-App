@@ -86,14 +86,17 @@ create policy "Only admins can insert or update products"
 create table if not exists public.orders (
   id text primary key,
   user_id uuid references public.profiles(id) on delete set null,
+  customer_id uuid references public.profiles(id) on delete set null,
   customer_name text not null,
-  customer_email text not null,
-  customer_phone text not null,
+  customer_email text,
+  customer_phone text,
+  phone text,
   delivery_address text not null,
   delivery_city text not null,
   delivery_notes text,
+  notes text,
   status text not null default 'pending' 
-    check (status in ('pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'cancelled')),
+    check (status in ('pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'cancelled', 'archived')),
   payment_method text not null,
   payment_status text not null default 'Paid' check (payment_status in ('Paid', 'Unpaid')),
   subtotal numeric(10, 2) not null,
@@ -104,6 +107,25 @@ create table if not exists public.orders (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Migration / Safety: If orders table was previously created without customer_name or columns:
+alter table public.orders add column if not exists customer_name text;
+alter table public.orders add column if not exists customer_email text;
+alter table public.orders add column if not exists customer_phone text;
+alter table public.orders add column if not exists phone text;
+alter table public.orders add column if not exists user_id uuid references public.profiles(id);
+alter table public.orders add column if not exists customer_id uuid references public.profiles(id);
+alter table public.orders add column if not exists delivery_city text default 'Local Delivery';
+alter table public.orders add column if not exists delivery_notes text;
+alter table public.orders add column if not exists notes text;
+alter table public.orders add column if not exists payment_status text default 'Paid';
+
+-- Backfill customer_name from profiles table for any legacy records
+update public.orders o
+set customer_name = p.full_name
+from public.profiles p
+where (o.customer_name is null or o.customer_name = '' or o.customer_name = 'Customer' or o.customer_name = 'Valued Customer')
+  and (o.user_id = p.id or o.customer_id = p.id);
 
 -- Enable RLS on orders
 alter table public.orders enable row level security;

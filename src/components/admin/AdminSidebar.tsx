@@ -35,7 +35,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'products', label: 'Popcorn Products', icon: <Package className="w-4 h-4" /> },
     { id: 'customers', label: 'Customers', icon: <Users className="w-4 h-4" /> },
     { id: 'sales', label: 'Sales & Analytics', icon: <TrendingUp className="w-4 h-4" /> },
-    { id: 'settings', label: 'Store & Supabase', icon: <Settings className="w-4 h-4" /> },
+    { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
 
   return (

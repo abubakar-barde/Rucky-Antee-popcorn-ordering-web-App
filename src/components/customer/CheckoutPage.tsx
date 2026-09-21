@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useOrders } from '../../context/OrderContext';
@@ -53,6 +53,16 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [deliveryCity, setDeliveryCity] = useState(user?.default_city || '');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Card');
   const [deliveryNotes, setDeliveryNotes] = useState('');
+
+  // Keep form initialized with user profile info if user logs in after mounting
+  useEffect(() => {
+    if (user) {
+      if (!customerName && user.full_name) setCustomerName(user.full_name);
+      if (!customerPhone && user.phone) setCustomerPhone(user.phone);
+      if (!deliveryAddress && user.default_address) setDeliveryAddress(user.default_address);
+      if (!deliveryCity && user.default_city) setDeliveryCity(user.default_city);
+    }
+  }, [user]);
 
   // Submission & Validation states
   const [errors, setErrors] = useState<ValidationErrors>({});

@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import { PopcornProduct, Order, OrderItem, UserProfile, OrderStatus, UserRole } from '../types';
 import { POPCORN_SIZES } from '../data/initialData';
+import { formatNaira } from './currency';
 
 /**
  * Maps Supabase 'orders' and 'order_items' rows to frontend Order interface
@@ -14,34 +15,52 @@ function mapOrderFromDb(row: any): Order {
     quantity: Number(it.quantity) || 1,
     unit_price: Number(it.unit_price) || 0,
     subtotal: Number(it.subtotal) || (Number(it.unit_price) * Number(it.quantity)) || 0,
-    total_price: Number(it.subtotal) || 0,
+    total_price: Number(it.subtotal || it.total_price) || (Number(it.unit_price) * Number(it.quantity)) || 0,
     created_at: it.created_at,
   }));
 
+  const customerName =
+    row.customer_name ||
+    row.customerName ||
+    (row.profiles && typeof row.profiles === 'object' ? row.profiles.full_name : null) ||
+    'Customer';
+
+  const customerEmail =
+    row.customer_email ||
+    row.customerEmail ||
+    (row.profiles && typeof row.profiles === 'object' ? row.profiles.email : '') ||
+    '';
+
+  const customerPhone =
+    row.customer_phone ||
+    row.phone ||
+    (row.profiles && typeof row.profiles === 'object' ? row.profiles.phone : '') ||
+    '';
+
   return {
     id: String(row.id),
-    customer_id: String(row.customer_id),
-    user_id: String(row.customer_id),
+    customer_id: String(row.customer_id || row.user_id || ''),
+    user_id: String(row.user_id || row.customer_id || ''),
     status: (row.status as OrderStatus) || 'pending',
     subtotal: Number(row.subtotal) || 0,
     delivery_fee: Number(row.delivery_fee) || 0,
     total: Number(row.total) || 0,
     delivery_address: row.delivery_address || '',
-    phone: row.phone || '',
-    customer_phone: row.phone || '',
+    phone: customerPhone,
+    customer_phone: customerPhone,
     payment_method: row.payment_method || 'Card',
-    notes: row.notes || '',
-    delivery_notes: row.notes || '',
+    notes: row.notes || row.delivery_notes || '',
+    delivery_notes: row.delivery_notes || row.notes || '',
     created_at: row.created_at,
     updated_at: row.updated_at,
     items,
     // UI helpers
-    customer_name: row.customer_name || 'Customer',
-    customer_email: row.customer_email || '',
+    customer_name: customerName,
+    customer_email: customerEmail,
     payment_status: row.payment_status || 'Paid',
     delivery_city: row.delivery_city || 'Local Delivery',
-    estimated_delivery: '20-35 mins',
-    discount: 0,
+    estimated_delivery: row.estimated_delivery || '25-35 mins',
+    discount: Number(row.discount) || 0,
   };
 }
 
@@ -225,9 +244,46 @@ export const OrdersService = {
         return [];
       }
 
-      const orders = (data || []).map((row: any) => mapOrderFromDb(row));
+      let orders = (data || []).map((row: any) => mapOrderFromDb(row));
+
+      // Enrich customer names from profiles for any historical orders where customer_name is missing or placeholder
+      const ordersNeedingName = orders.filter(
+        (o) => !o.customer_name || o.customer_name === 'Customer' || o.customer_name === 'Valued Customer'
+      );
+      if (ordersNeedingName.length > 0) {
+        const userIds = Array.from(
+          new Set(ordersNeedingName.map((o) => o.user_id || o.customer_id).filter(Boolean))
+        );
+        if (userIds.length > 0) {
+          try {
+            const { data: profileRows } = await supabase
+              .from('profiles')
+              .select('id, full_name, email, phone')
+              .in('id', userIds);
+
+            if (profileRows && profileRows.length > 0) {
+              const profileMap = new Map(profileRows.map((p: any) => [p.id, p]));
+              orders.forEach((o) => {
+                const targetId = o.user_id || o.customer_id;
+                const p = profileMap.get(targetId);
+                if (p && p.full_name) {
+                  o.customer_name = p.full_name;
+                  if (!o.customer_email && p.email) o.customer_email = p.email;
+                  if (!o.customer_phone && p.phone) {
+                    o.customer_phone = p.phone;
+                    o.phone = p.phone;
+                  }
+                }
+              });
+            }
+          } catch (profileErr) {
+            console.warn('Could not enrich orders with profile names:', profileErr);
+          }
+        }
+      }
+
       if (clearedTime > 0) {
-        return orders.filter(o => new Date(o.created_at).getTime() > clearedTime);
+        return orders.filter((o) => new Date(o.created_at).getTime() > clearedTime);
       }
       return orders;
     } catch (err) {
@@ -243,7 +299,7 @@ export const OrdersService = {
       const { data, error } = await supabase
         .from('orders')
         .select('*, order_items(*)')
-        .eq('customer_id', customerId)
+        .or(`customer_id.eq.${customerId},user_id.eq.${customerId}`)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -282,32 +338,155 @@ export const OrdersService = {
     }
 
     const items = orderData.items || [];
-    const p_items = items.map((item) => ({
-      product_id: item.product_id,
-      quantity: item.quantity,
-    }));
+    const custName = (orderData.customer_name || '').trim() || 'Valued Customer';
+    const custEmail = (orderData.customer_email || '').trim();
+    const custPhone = (orderData.customer_phone || orderData.phone || '').trim();
+    const deliveryAddress = (orderData.delivery_address || '').trim();
+    const deliveryCity = (orderData.delivery_city || 'Local Delivery').trim();
+    const deliveryNotes = (orderData.delivery_notes || orderData.notes || '').trim();
+    const paymentMethod = orderData.payment_method || 'Card';
+    const paymentStatus = orderData.payment_status || 'Paid';
+    const custId = orderData.customer_id || orderData.user_id || null;
 
-    const { data: createdOrder, error: rpcErr } = await supabase.rpc('create_customer_order', {
-      p_items,
-      p_delivery_address: orderData.delivery_address || '',
-      p_phone: orderData.phone || orderData.customer_phone || '',
-      p_payment_method: orderData.payment_method || 'Card',
-      p_notes: orderData.notes || orderData.delivery_notes || '',
-    });
+    const orderId = orderData.id || `ORD-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
-    if (rpcErr) throw rpcErr;
-    if (!createdOrder) throw new Error('Failed to create order');
+    let createdOrder: any = null;
+
+    // Strategy 1: Direct table insert into 'orders' with customer_name explicitly included
+    const directPayload: any = {
+      id: orderId,
+      user_id: custId,
+      customer_id: custId,
+      customer_name: custName,
+      customer_email: custEmail,
+      customer_phone: custPhone,
+      phone: custPhone,
+      delivery_address: deliveryAddress,
+      delivery_city: deliveryCity,
+      delivery_notes: deliveryNotes,
+      notes: deliveryNotes,
+      status: 'pending',
+      payment_method: paymentMethod,
+      payment_status: paymentStatus,
+      subtotal: Number(orderData.subtotal) || 0,
+      delivery_fee: Number(orderData.delivery_fee) || 0,
+      discount: Number(orderData.discount) || 0,
+      total: Number(orderData.total) || 0,
+      estimated_delivery: orderData.estimated_delivery || '25-35 mins',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    try {
+      const { data: insertedOrder, error: insertErr } = await supabase
+        .from('orders')
+        .insert(directPayload)
+        .select()
+        .maybeSingle();
+
+      if (!insertErr && insertedOrder) {
+        createdOrder = insertedOrder;
+
+        // Insert line items
+        if (items.length > 0) {
+          const itemRows = items.map((it) => ({
+            order_id: createdOrder.id,
+            product_id: it.product_id,
+            product_name: it.product_name,
+            product_image: it.product_image || '',
+            size: it.size || 'Regular',
+            unit_price: Number(it.unit_price) || 0,
+            quantity: Number(it.quantity) || 1,
+            total_price: Number(it.total_price || it.subtotal) || (Number(it.unit_price) * Number(it.quantity)),
+            subtotal: Number(it.subtotal || it.total_price) || (Number(it.unit_price) * Number(it.quantity)),
+            seasoning: it.seasoning || '',
+          }));
+
+          const { error: itemsErr } = await supabase.from('order_items').insert(itemRows);
+          if (itemsErr) {
+            console.warn('Warning inserting order_items into Supabase:', itemsErr);
+          }
+        }
+      } else if (insertErr) {
+        console.warn('Direct insert into orders attempted, fallback to RPC:', insertErr.message);
+      }
+    } catch (e) {
+      console.warn('Direct insert exception, trying RPC fallback:', e);
+    }
+
+    // Strategy 2: If direct insert failed, try RPC create_customer_order
+    if (!createdOrder) {
+      const p_items = items.map((item) => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+      }));
+
+      // Try with p_customer_name included
+      let rpcRes = await supabase.rpc('create_customer_order', {
+        p_items,
+        p_customer_name: custName,
+        p_delivery_address: deliveryAddress,
+        p_phone: custPhone,
+        p_payment_method: paymentMethod,
+        p_notes: deliveryNotes,
+      });
+
+      if (rpcRes.error) {
+        // Fallback to signature without p_customer_name if not defined in database RPC
+        rpcRes = await supabase.rpc('create_customer_order', {
+          p_items,
+          p_delivery_address: deliveryAddress,
+          p_phone: custPhone,
+          p_payment_method: paymentMethod,
+          p_notes: deliveryNotes,
+        });
+      }
+
+      if (rpcRes.error) {
+        throw new Error(rpcRes.error.message || 'Failed to create order in Supabase database.');
+      }
+
+      createdOrder = rpcRes.data;
+
+      // Update customer_name on the created order in Supabase
+      if (createdOrder && createdOrder.id) {
+        try {
+          await supabase
+            .from('orders')
+            .update({
+              customer_name: custName,
+              customer_email: custEmail,
+              customer_phone: custPhone,
+            })
+            .eq('id', createdOrder.id);
+        } catch (e) {
+          console.warn('Could not update customer_name on created order:', e);
+        }
+      }
+    }
+
+    if (!createdOrder) {
+      throw new Error('Failed to create order in Supabase database.');
+    }
+
+    // Ensure customer name is preserved on the returned object
+    createdOrder.customer_name = custName;
+    createdOrder.customer_email = custEmail;
+    createdOrder.customer_phone = custPhone;
 
     // Create notifications
     try {
-      // Customer notification
-      await NotificationsService.create({
-        user_id: createdOrder.customer_id,
-        order_id: createdOrder.id,
-        title: 'Order Received',
-        message: 'Your order has been received successfully.',
-        type: 'order_status',
-      });
+      const targetCustId = createdOrder.customer_id || createdOrder.user_id || custId;
+      if (targetCustId) {
+        await NotificationsService.create({
+          user_id: targetCustId,
+          order_id: createdOrder.id,
+          title: 'Order Received',
+          message: `Your popcorn order #${createdOrder.id} has been received successfully.`,
+          type: 'order_status',
+        });
+      }
+
       // Admin notification
       const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
       if (admins) {
@@ -315,8 +494,8 @@ export const OrdersService = {
           await NotificationsService.create({
             user_id: admin.id,
             order_id: createdOrder.id,
-            title: 'New Order',
-            message: 'A new customer order has been received.',
+            title: 'New Customer Order',
+            message: `New order #${createdOrder.id} placed by ${custName} (${formatNaira(Number(orderData.total) || 0)}).`,
             type: 'new_order',
           });
         }
@@ -348,25 +527,26 @@ export const OrdersService = {
 
     // Create status update notification
     try {
-      console.log('DEBUG: Updating order status, data fetched:', JSON.stringify(data));
       const messages: Record<OrderStatus, string> = {
-        pending: 'Your order is pending.',
-        confirmed: 'Your order has been confirmed.',
-        preparing: 'Your order is now being prepared.',
-        ready: 'Your order is ready.',
-        out_for_delivery: 'Your order is out for delivery.',
-        delivered: 'Your order has been delivered.',
+        pending: 'Your order is pending review.',
+        confirmed: 'Your order has been confirmed by our kitchen.',
+        preparing: 'Your popcorn is now popping fresh in our kitchen!',
+        ready: 'Your order is heat-sealed and ready for pickup / dispatch.',
+        out_for_delivery: 'Our courier is out for delivery with your hot popcorn!',
+        delivered: 'Your popcorn order has been delivered! Enjoy your treat.',
         cancelled: 'Your order has been cancelled.',
         archived: '',
       };
-      await NotificationsService.create({
-        user_id: data.customer_id,
-        order_id: data.id,
-        title: 'Order Status Update',
-        message: messages[status],
-        type: 'order_status',
-      });
-      console.log('DEBUG: Notification created successfully');
+      const notifUserId = data.customer_id || data.user_id;
+      if (notifUserId && status !== 'archived') {
+        await NotificationsService.create({
+          user_id: notifUserId,
+          order_id: data.id,
+          title: 'Order Status Update',
+          message: messages[status] || `Your order status changed to ${status}.`,
+          type: 'order_status',
+        });
+      }
     } catch (err) {
       console.error('Error creating notification:', err);
     }

@@ -27,17 +27,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 }) => {
   const { orders, products, updateOrderStatus } = useOrders();
 
-  const totalRevenue = orders
+  const activeOrdersList = orders.filter(o => o.status !== 'archived');
+  
+  const totalRevenue = activeOrdersList
     .filter((o) => o.status !== 'cancelled')
     .reduce((acc, curr) => acc + curr.total, 0);
 
-  const pendingOrders = orders.filter((o) => o.status === 'pending');
-  const activeOrders = orders.filter((o) =>
+  const pendingOrders = activeOrdersList.filter((o) => o.status === 'pending');
+  const activeOrders = activeOrdersList.filter((o) =>
     ['confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(o.status)
   );
-  const completedOrders = orders.filter((o) => o.status === 'delivered');
+  const completedOrders = activeOrdersList.filter((o) => o.status === 'delivered');
 
-  const recentOrders = orders.slice(0, 6);
+  const recentOrders = activeOrdersList.slice(0, 6);
 
   const handleQuickStatus = async (orderId: string, nextStatus: OrderStatus, e: React.MouseEvent) => {
     e.stopPropagation();

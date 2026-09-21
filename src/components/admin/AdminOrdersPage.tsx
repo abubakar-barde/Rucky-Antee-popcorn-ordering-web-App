@@ -32,11 +32,14 @@ export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({ onOpenOrder })
     }
 
     // Search filter
+    const query = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer_phone.includes(searchQuery) ||
-      order.delivery_city.toLowerCase().includes(searchQuery.toLowerCase());
+      !query ||
+      (order.id || '').toLowerCase().includes(query) ||
+      (order.customer_name || '').toLowerCase().includes(query) ||
+      (order.customer_email || '').toLowerCase().includes(query) ||
+      (order.customer_phone || order.phone || '').includes(query) ||
+      (order.delivery_city || '').toLowerCase().includes(query);
 
     return matchesTab && matchesSearch;
   });
